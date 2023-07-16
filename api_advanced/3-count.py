@@ -1,13 +1,15 @@
 #!/usr/bin/python3
-""" word count function """
+"""
+word count function
+"""
 import json
 import requests
 
 
-def count_words(subreddit, word_list, after="", count={}):
+def count_words(subreddit, word_list, after="", count=None):
     """ returns a sorted count of given keywords """
-
-    if not after:
+    
+    if count is None:
         count = {word.lower(): 0 for word in word_list}
 
     url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
@@ -39,4 +41,3 @@ if __name__ == "__main__":
     subreddit = "unpopular"
     word_list = ['you', 'unpopular', 'vote', 'down', 'downvote', 'her', 'politics']
     count_words(subreddit, word_list)
-
