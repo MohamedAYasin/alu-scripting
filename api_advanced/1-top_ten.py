@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """
- A function that queries the Reddit API and prints the titles of the first ten posts.
+ A function that queries the Reddit API and prints the titles.
 """
 
 import requests
