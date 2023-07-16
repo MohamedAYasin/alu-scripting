@@ -1,9 +1,6 @@
 #!/usr/bin/python3
 """
-1-top_ten.py: Top Ten
-
-This module contains a function that queries the Reddit API and prints the
-titles of the first 10 hot posts listed for a given subreddit.
+ A function that queries the Reddit API and prints the titles of the first 10 hot posts listed for a given subreddit.
 """
 
 import requests
