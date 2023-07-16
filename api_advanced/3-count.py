@@ -1,60 +1,51 @@
 #!/usr/bin/python3
-""""Function"""
+"""count words function"""
+
+import json
 import requests
 
 
-def count_words(subreddit, word_list, after="", words_count={}):
-    """"Doc"""
-    url = "https://www.reddit.com/r/{}/hot.json?limit=100" \
+def count_words(subreddit, word_list, after='', hot_list=[]):
+    """Function that queries the Reddit API."""
+    if after == '':
+        hot_list = [0] * len(word_list)
+    url = "https://www.reddit.com/r/{}/hot.json" \
         .format(subreddit)
-    header = {'User-Agent': 'Mozilla/5.0'}
-    param = {'after': after}
-    res = requests.get(url, headers=header, params=param)
+    request = requests.get(url, params={'after': after},
+                           allow_redirects=False,
+                           headers={'User-Agent': 'My User Agent 1.0'})
+    if request.status_code == 200:
+        data = request.json()
 
-    if res.status_code != 200:
-        return
+        for topic in (data['data']['children']):
+            for word in topic['data']['title'].split():
+                for i in range(len(word_list)):
+                    if word_list[i].lower() == word.lower():
+                        hot_list[i] += 1
 
-    json_res = res.json()  # chch
-    after = json_res.get('data').get('after')
-    has_next = after is not None
-    hot_titles = []
-    words = [word.lower() for word in word_list]
+        after = data['data']['after']
+        if after is None:
+            save = []
+            for i in range(len(word_list)):
+                for j in range(i + 1, len(word_list)):
+                    if word_list[i].lower() == word_list[j].lower():
+                        save.append(j)
+                        hot_list[i] += hot_list[j]
 
-    if len(words_count) == 0:
-        words_count = {word: 0 for word in words}
-    # print(words_count)
-    hot_articles = json_res.get('data').get('children')
-    [hot_titles.append(article.get('data').get('title'))
-     for article in hot_articles]
+            for i in range(len(word_list)):
+                for j in range(i, len(word_list)):
+                    if (hot_list[j] > hot_list[i] or
+                            (word_list[i] > word_list[j] and
+                             hot_list[j] == hot_list[i])):
+                        a = hot_list[i]
+                        hot_list[i] = hot_list[j]
+                        hot_list[j] = a
+                        a = word_list[i]
+                        word_list[i] = word_list[j]
+                        word_list[j] = a
 
-    # loop through all titles
-    for i in range(len(hot_titles)):
-        # make the title as a list of word
-        # title_words = hot_titles[i].lower().split()
-        for title_word in hot_titles[i].lower().split():
-            for word in words:
-                if word.lower() == title_word:
-                    words_count[word] = words_count.get(word) + 1
-                # else:
-                #     # pass
-                #     print(word.lower() + " != " + title_word)
-
-    if has_next:
-        # print(after + "\t" + str(has_next))
-        return count_words(subreddit, word_list, after, words_count)
-    else:
-
-        words_count = dict(filter(lambda item: item[1] != 0,
-                                  words_count.items()))
-        # their python version is not making people’s life easier
-        # words_count = {key: value for key, value in
-        #                sorted(words_count.items(),
-        #                       key=lambda item: item[1], reverse=True)}
-
-        words_count = sorted(words_count.items(),
-                             key=lambda item: item[1],
-                             reverse=True)
-
-        for i in range(len(words_count)):
-            print("{}: {}".format(words_count[i][0],
-                                  words_count[i][1]))
+            for i in range(len(word_list)):
+                if (hot_list[i] > 0) and i not in save:
+                    print("{}: {}".format(word_list[i].lower(), hot_list[i]))
+        else:
+            count_words(subreddit, word_list, after, hot_list)
